@@ -1,6 +1,6 @@
 # Contrats du portail
 
-Le transport public est la CLI `python -m portal --user <compte> …`. Les exemples JSON décrivent les commandes après authentification. Le transport obtient le rôle du registre de l’instance après vérification du jeton. L’identité et le rôle ne sont jamais fournis dans la charge utile. Les arguments manquants de la CLI donnent le code de sortie 2.
+Le transport public est la CLI `python -m portal --user <compte> …`. Les exemples JSON décrivent les commandes après authentification. Le transport obtient le rôle du registre de l’instance après vérification du jeton. L’identité et le rôle ne sont jamais fournis dans la charge utile. Les arguments manquants de la CLI donnent le code de sortie 2. Les invites et les erreurs sont écrites sur stderr. La sortie standard contient le JSON des commandes réussies.
 
 ## Créer une demande
 

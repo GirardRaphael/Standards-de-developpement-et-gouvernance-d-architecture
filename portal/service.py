@@ -63,23 +63,7 @@ class Service:
                 if actor.role == Role.EMPLOYEE:
                     raise Forbidden("Action réservée au personnel de traitement.")
                 request = find(repo, clean_fields["request_id"])
-                if (
-                    actor.role == Role.AGENT
-                    and operation != "assign"
-                    and request.assignee != actor.id
-                ):
-                    raise Forbidden("Action réservée à l’agent affecté.")
-                if actor.role != Role.SUPERVISOR and (
-                    clean_fields.get("status") == Status.CLOSED
-                    or (
-                        operation == "assign"
-                        and (
-                            clean_fields["assignee"] != actor.id
-                            or request.assignee not in {None, actor.id}
-                        )
-                    )
-                ):
-                    raise Forbidden("Action réservée au superviseur.")
+                self.authorize_change(actor, request, operation, clean_fields)
 
             previous = repo.receipt(actor.id, key)
             if previous is not None:
@@ -108,6 +92,24 @@ class Service:
             receipt = Receipt(fingerprint, request.id, request.status)
             repo.record(actor.id, key, receipt)
             return self.result(receipt, replayed=False)
+
+    @staticmethod
+    def authorize_change(
+        actor: Actor, request: Request, operation: str, fields: dict[str, str]
+    ) -> None:
+        if actor.role == Role.SUPERVISOR:
+            return
+        if operation == "assign":
+            if fields["assignee"] != actor.id or request.assignee not in {
+                None,
+                actor.id,
+            }:
+                raise Forbidden("Un agent peut seulement s’affecter une demande libre.")
+            return
+        if request.assignee != actor.id:
+            raise Forbidden("Action réservée à l’agent affecté.")
+        if operation == "status" and fields["status"] == Status.CLOSED:
+            raise Forbidden("Fermeture réservée au superviseur.")
 
     @staticmethod
     def validate(operation: str, fields: dict[str, str]) -> dict[str, str]:

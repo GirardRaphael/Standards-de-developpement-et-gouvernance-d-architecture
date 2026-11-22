@@ -70,14 +70,23 @@ def parser() -> argparse.ArgumentParser:
     return root
 
 
+def prompt(label: str) -> str:
+    print(label, end="", file=sys.stderr, flush=True)
+    return input()
+
+
 def execute(args: argparse.Namespace, service: Service, actor: Actor):
     operation = args.operation
+    if operation in {"list", "get"}:
+        print("Traitement en cours…", file=sys.stderr)
     if operation == "list":
-        return service.list(actor, parse_status(args.status) if args.status else None)
+        return service.list(
+            actor, parse_status(args.status) if args.status is not None else None
+        )
     if operation == "get":
         return service.get(actor, args.request_id)
     if operation == "create":
-        fields = {"title": input("Titre : "), "description": input("Description : ")}
+        fields = {"title": prompt("Titre : "), "description": prompt("Description : ")}
     else:
         fields = {"request_id": args.request_id}
         if operation == "assign":
@@ -85,12 +94,16 @@ def execute(args: argparse.Namespace, service: Service, actor: Actor):
         elif operation == "status":
             fields["status"] = args.status
         else:
-            fields["text"] = input("Note interne : ")
+            fields["text"] = prompt("Note interne : ")
+    print("Traitement en cours…", file=sys.stderr)
     return service.command(actor, args.key, operation, **fields)
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = parser().parse_args(argv)
+    cli = parser()
+    args = cli.parse_args(argv)
+    if args.operation != "init" and not args.user:
+        cli.error("--user est obligatoire pour cette commande.")
     storage = SQLiteStorage(args.instance / "requests.sqlite3")
     try:
         if args.operation == "init":
@@ -106,7 +119,6 @@ def main(argv: list[str] | None = None) -> int:
         service = Service(
             storage, {name: Role(data["role"]) for name, data in accounts.items()}
         )
-        print("Traitement en cours…", file=sys.stderr)
         print(json.dumps(execute(args, service, actor), indent=2))
         return 0
     except PortalError as error:

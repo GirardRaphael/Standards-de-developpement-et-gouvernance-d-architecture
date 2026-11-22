@@ -5,19 +5,25 @@ Requirement already satisfied: ruff==0.11.13 in /workspace/scratch/55b1283532e9/
 [notice] To update, run: pip install --upgrade pip
 7 files already formatted
 All checks passed!
+test_cli_create_writes_only_json_to_stdout (test_portal.PortalTests.test_cli_create_writes_only_json_to_stdout) ... ok
 test_cli_displays_failure_without_internal_details (test_portal.PortalTests.test_cli_displays_failure_without_internal_details) ... ok
+test_cli_rejects_explicit_empty_filter (test_portal.PortalTests.test_cli_rejects_explicit_empty_filter) ... ok
 test_cli_rejects_wrong_token (test_portal.PortalTests.test_cli_rejects_wrong_token) ... ok
+test_cli_requires_user_before_requesting_token (test_portal.PortalTests.test_cli_requires_user_before_requesting_token) ... ok
 test_concurrent_duplicate_and_key_conflict (test_portal.PortalTests.test_concurrent_duplicate_and_key_conflict) ... ok
+test_corrupted_row_reports_storage_failure (test_portal.PortalTests.test_corrupted_row_reports_storage_failure) ... ok
 test_failed_receipt_rolls_back_request_and_allows_retry (test_portal.PortalTests.test_failed_receipt_rolls_back_request_and_allows_retry) ... ok
 test_invalid_creation (test_portal.PortalTests.test_invalid_creation) ... ok
 test_invalid_transition_and_missing_assignment (test_portal.PortalTests.test_invalid_transition_and_missing_assignment) ... ok
 test_lifecycle_and_agent_cannot_close (test_portal.PortalTests.test_lifecycle_and_agent_cannot_close) ... ok
+test_lock_refuses_write_and_allows_same_key_after_release (test_portal.PortalTests.test_lock_refuses_write_and_allows_same_key_after_release) ... ok
 test_note_retry_has_one_effect (test_portal.PortalTests.test_note_retry_has_one_effect) ... ok
+test_reassignment_revokes_old_agent_note_and_replay_access (test_portal.PortalTests.test_reassignment_revokes_old_agent_note_and_replay_access) ... ok
 test_valid_creation_and_filter (test_portal.PortalTests.test_valid_creation_and_filter) ... ok
 test_visibility_and_missing_request (test_portal.PortalTests.test_visibility_and_missing_request) ... ok
 
 ----------------------------------------------------------------------
-Ran 10 tests in 0.019s
+Ran 16 tests in 1.033s
 
 OK
 Contrôles réussis

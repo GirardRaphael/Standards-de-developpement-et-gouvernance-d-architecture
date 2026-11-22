@@ -45,9 +45,12 @@ class SQLiteRepository:
 
     @staticmethod
     def decode(body: str) -> Request:
-        fields = json.loads(body)
-        fields["status"] = Status(fields["status"])
-        return Request(**fields)
+        try:
+            fields = json.loads(body)
+            fields["status"] = Status(fields["status"])
+            return Request(**fields)
+        except (ValueError, KeyError, TypeError) as error:
+            raise Unavailable("Une demande stockée est illisible.") from error
 
     def get(self, request_id: str) -> Request | None:
         row = self.db.execute(

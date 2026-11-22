@@ -47,6 +47,8 @@ class Actor:
 
 
 def required(value: str, label: str, limit: int) -> str:
+    if not isinstance(value, str):
+        raise Invalid(f"{label} doit être un texte.")
     value = value.strip()
     if not value or len(value) > limit:
         raise Invalid(f"{label} doit contenir de 1 à {limit} caractères.")

@@ -153,9 +153,12 @@ class PortalTests(unittest.TestCase):
             db.execute("DROP TRIGGER simulated_error")
         self.assertFalse(self.create()["replayed"])
 
-    def test_cli_displays_failure_without_internal_details(self):
-        accounts = {"employe": {"role": "EMPLOYEE", "digest": digest("test")}}
+    def write_employee_account(self, token):
+        accounts = {"employe": {"role": "EMPLOYEE", "digest": digest(token)}}
         (self.path / "accounts.json").write_text(json.dumps(accounts), encoding="utf-8")
+
+    def test_cli_displays_failure_without_internal_details(self):
+        self.write_employee_account("test")
         self.storage.path.unlink()
         error = io.StringIO()
         with patch("portal.__main__.getpass.getpass", return_value="test"):
@@ -167,11 +170,101 @@ class PortalTests(unittest.TestCase):
         self.assertNotIn("no such table", error.getvalue())
 
     def test_cli_rejects_wrong_token(self):
-        accounts = {"employe": {"role": "EMPLOYEE", "digest": digest("right")}}
-        (self.path / "accounts.json").write_text(json.dumps(accounts), encoding="utf-8")
+        self.write_employee_account("right")
         error = io.StringIO()
         with patch("portal.__main__.getpass.getpass", return_value="wrong"):
             with contextlib.redirect_stderr(error):
                 code = main(["--instance", str(self.path), "--user", "employe", "list"])
         self.assertEqual(code, 1)
         self.assertIn("ACCES_REFUSE", error.getvalue())
+
+    def test_reassignment_revokes_old_agent_note_and_replay_access(self):
+        identifier = self.create()["request_id"]
+        self.change(self.agent, "take", "assign", identifier, assignee=self.agent.id)
+        self.change(self.agent, "note", "note", identifier, text="Interne")
+        self.change(
+            self.supervisor, "transfer", "assign", identifier, assignee=self.other.id
+        )
+
+        self.assertNotIn("notes", self.service.get(self.agent, identifier))
+        self.assertEqual(len(self.service.get(self.other, identifier)["notes"]), 1)
+        with self.assertRaises(Forbidden):
+            self.change(self.agent, "note", "note", identifier, text="Interne")
+        with self.assertRaises(Forbidden):
+            self.change(
+                self.agent, "take", "assign", identifier, assignee=self.agent.id
+            )
+
+    def test_lock_refuses_write_and_allows_same_key_after_release(self):
+        with contextlib.closing(sqlite3.connect(self.storage.path)) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            with self.assertRaises(Unavailable):
+                self.create()
+            self.assertEqual(self.service.list(self.employee), [])
+        result = self.create()
+        self.assertFalse(result["replayed"])
+        self.assertEqual(len(self.service.list(self.employee)), 1)
+
+    def test_corrupted_row_reports_storage_failure(self):
+        identifier = self.create()["request_id"]
+        with contextlib.closing(sqlite3.connect(self.storage.path)) as db, db:
+            db.execute(
+                "UPDATE requests SET body = ? WHERE id = ?", ("{invalid", identifier)
+            )
+        with self.assertRaises(Unavailable):
+            self.service.get(self.employee, identifier)
+
+    def test_cli_create_writes_only_json_to_stdout(self):
+        self.write_employee_account("test")
+        output, error = io.StringIO(), io.StringIO()
+        with (
+            patch("portal.__main__.getpass.getpass", return_value="test"),
+            patch("sys.stdin", io.StringIO("VPN\nDemande de connexion\n")),
+            contextlib.redirect_stdout(output),
+            contextlib.redirect_stderr(error),
+        ):
+            code = main(
+                [
+                    "--instance",
+                    str(self.path),
+                    "--user",
+                    "employe",
+                    "create",
+                    "--key",
+                    "vpn",
+                ]
+            )
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(output.getvalue())["status"], "NEW")
+        self.assertIn("Titre", error.getvalue())
+
+    def test_cli_rejects_explicit_empty_filter(self):
+        self.write_employee_account("test")
+        error = io.StringIO()
+        with (
+            patch("portal.__main__.getpass.getpass", return_value="test"),
+            contextlib.redirect_stderr(error),
+        ):
+            code = main(
+                [
+                    "--instance",
+                    str(self.path),
+                    "--user",
+                    "employe",
+                    "list",
+                    "--status",
+                    "",
+                ]
+            )
+        self.assertEqual(code, 1)
+        self.assertIn("VALIDATION", error.getvalue())
+
+    def test_cli_requires_user_before_requesting_token(self):
+        with (
+            patch("portal.__main__.getpass.getpass") as getpass,
+            contextlib.redirect_stderr(io.StringIO()),
+            self.assertRaises(SystemExit) as failure,
+        ):
+            main(["list"])
+        getpass.assert_not_called()
+        self.assertEqual(failure.exception.code, 2)

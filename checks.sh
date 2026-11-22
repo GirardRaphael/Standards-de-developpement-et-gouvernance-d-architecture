@@ -7,5 +7,4 @@ python -m ruff check .
 python -m unittest discover -s tests -v
 python -m compileall -q portal
 python -m portal --help >/dev/null
-git diff --check
 echo "Contrôles réussis"

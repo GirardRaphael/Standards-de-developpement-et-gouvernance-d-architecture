@@ -13,7 +13,7 @@ class SQLiteStorage:
         self.path = path
 
     def initialize(self) -> None:
-        with self.transaction(write=True) as repo:
+        with self.transaction(write=True, create=True) as repo:
             repo.db.execute(
                 "CREATE TABLE IF NOT EXISTS requests (id TEXT PRIMARY KEY, "
                 "owner TEXT NOT NULL, status TEXT NOT NULL, body TEXT NOT NULL)"
@@ -26,9 +26,11 @@ class SQLiteStorage:
             )
 
     @contextmanager
-    def transaction(self, *, write: bool = False):
+    def transaction(self, *, write: bool = False, create: bool = False):
         try:
-            with closing(sqlite3.connect(self.path, timeout=1)) as db, db:
+            mode = "rwc" if create else ("rw" if write else "ro")
+            uri = f"{self.path.resolve().as_uri()}?mode={mode}"
+            with closing(sqlite3.connect(uri, uri=True, timeout=1)) as db, db:
                 db.execute("BEGIN IMMEDIATE" if write else "BEGIN")
                 yield SQLiteRepository(db)
         except sqlite3.Error as error:

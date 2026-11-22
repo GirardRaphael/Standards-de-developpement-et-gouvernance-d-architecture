@@ -1,0 +1,23 @@
+Python 3.12.14
+Requirement already satisfied: ruff==0.11.13 in /workspace/scratch/55b1283532e9/.venv/lib/python3.12/site-packages (from -r requirements-dev.txt (line 1)) (0.11.13)
+
+[notice] A new release of pip is available: 25.0.1 -> 26.3
+[notice] To update, run: pip install --upgrade pip
+7 files already formatted
+All checks passed!
+test_cli_displays_failure_without_internal_details (test_portal.PortalTests.test_cli_displays_failure_without_internal_details) ... ok
+test_cli_rejects_wrong_token (test_portal.PortalTests.test_cli_rejects_wrong_token) ... ok
+test_concurrent_duplicate_and_key_conflict (test_portal.PortalTests.test_concurrent_duplicate_and_key_conflict) ... ok
+test_failed_receipt_rolls_back_request_and_allows_retry (test_portal.PortalTests.test_failed_receipt_rolls_back_request_and_allows_retry) ... ok
+test_invalid_creation (test_portal.PortalTests.test_invalid_creation) ... ok
+test_invalid_transition_and_missing_assignment (test_portal.PortalTests.test_invalid_transition_and_missing_assignment) ... ok
+test_lifecycle_and_agent_cannot_close (test_portal.PortalTests.test_lifecycle_and_agent_cannot_close) ... ok
+test_note_retry_has_one_effect (test_portal.PortalTests.test_note_retry_has_one_effect) ... ok
+test_valid_creation_and_filter (test_portal.PortalTests.test_valid_creation_and_filter) ... ok
+test_visibility_and_missing_request (test_portal.PortalTests.test_visibility_and_missing_request) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.019s
+
+OK
+Contrôles réussis

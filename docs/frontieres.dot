@@ -1,0 +1,21 @@
+digraph portal {
+  graph [rankdir=TB, bgcolor=white, fontname="DejaVu Sans", nodesep=.3, ranksep=.34, pad=.16]
+  node [shape=box, style="rounded,filled", fillcolor="#eaf2fa", color="#6886a0", fontname="DejaVu Sans", fontsize=12, margin=".18,.10"]
+  edge [color="#55728a", fontname="DejaVu Sans", fontsize=10]
+  cli [label="Adaptateur CLI\nAuthentification par jeton"]
+  subgraph cluster_owner {
+    label="Module Demandes • propriétaire des données"
+    color="#66829a"
+    fontname="DejaVu Sans"
+    service [label="Cas d’utilisation\nAutorisation et projection des notes"]
+    domain [label="Domaine\nInvariants et transitions"]
+    ports [label="Ports Storage et RequestRepository"]
+    sql [label="Adaptateur SQLite\nTransaction : demande + reçu"]
+    service -> domain
+    service -> ports
+    sql -> ports [label="implémente", constraint=false]
+    ports -> sql [label="appel à l’exécution", style=dashed]
+  }
+  cli -> service [label="contrat public"]
+  sql -> cli [label="erreur propagée : INDISPONIBLE", style=dashed, constraint=false]
+}
